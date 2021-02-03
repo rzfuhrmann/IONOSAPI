@@ -6,10 +6,12 @@
      * @version     2021-02-03
      * 
      */
-    
+
     class IONOSAPI {
         private $secret; 
         private $publicprefix; 
+
+        private $endpoint = 'https://api.hosting.ionos.com/dns';
 
         public function __construct($publicprefix, $secret){
             // @TODO: Error handling!
@@ -19,7 +21,7 @@
 
         private function doRequest($method, $path, $body = null){
 
-            $url = 'https://api.hosting.ionos.com/dns'.$path; 
+            $url = $this->endpoint.$path; 
             $cache_fn = __DIR__.'/cache/'.md5($this->secret.$url.$method).'.json';
 
             if (strtoupper($method) == 'GET' && file_exists($cache_fn) && filemtime($cache_fn) > time()-60*60*1){
@@ -27,15 +29,14 @@
                 $info = array("http_code" => 200); 
             } else {
                 $ch = curl_init(); 
+
                 curl_setopt($ch, CURLOPT_CUSTOMREQUEST, strtoupper($method)); 
                 curl_setopt($ch, CURLOPT_URL, $url); 
-                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE);
-                //curl_setopt($ch, CURLOPT_PROXY_SSL_VERIFYPEER, false);
-                //curl_setopt($ch, CURLOPT_PROXY_SSL_VERIFYHOST, false);
-                curl_setopt($ch, CURLOPT_PROXY, "192.168.1.166:8888");
+
                 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
                 curl_setopt($ch, CURLOPT_HTTPHEADER, array(
-                    'User-Agent: Any User-Agent...',
+                    // API will return HTTP 503 and HTML code if we don't provide an user name
+                    'User-Agent: IONOSAPI PHP class - https://github.com/rzfuhrmann/IONOSAPI/',
                     'accept: application/json',
                     'X-API-Key: '.$this->publicprefix.'.'.$this->secret 
                     
