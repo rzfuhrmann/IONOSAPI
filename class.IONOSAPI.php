@@ -27,12 +27,24 @@
             $this->publicprefix = $publicprefix;
         }
 
-        private function doRequest($method, $path, $body = null){
+        private function doRequest($method, $path, $body = null, $config = array()){
 
             $url = $this->endpoint.$path; 
             $cache_fn = __DIR__.'/cache/'.md5($this->secret.$url.$method).'.json';
 
-            if (strtoupper($method) == 'GET' && file_exists($cache_fn) && filemtime($cache_fn) > time()-60*60*1){
+            // simple caching: Generate checksum based on request; find a file with that name. 
+            if (
+                // writing actions can't be cached
+                strtoupper($method) == 'GET' 
+                // cache file must exists ... 
+                && file_exists($cache_fn) 
+                // ... and needs to be new enough
+                // @todo variable caching time
+                && filemtime($cache_fn) > time()-60*60*1
+
+                // && isCacheable
+            ){
+                // todo: check for valid content
                 $res = json_decode(file_get_contents($cache_fn), true);
                 $info = array("http_code" => 200); 
             } else {
@@ -47,7 +59,6 @@
                     'User-Agent: IONOSAPI PHP class - https://github.com/rzfuhrmann/IONOSAPI/',
                     'accept: application/json',
                     'X-API-Key: '.$this->publicprefix.'.'.$this->secret 
-                    
                 ));
 
                 $rawres = curl_exec($ch); 
@@ -56,6 +67,7 @@
                 curl_close($ch); 
 
                 if ($info["http_code"] == 200 && ($res = json_decode($rawres, true))){
+                    // if response seems to be correct => cache it!
                     file_put_contents($cache_fn, $rawres);
                 } else {
                     throw new Exception("Error in communication with IONOS API: ".$rawres, 1);
@@ -65,12 +77,15 @@
             return $res; 
         }
 
+        /**
+         * Retrieves a list of all DNS zones and their records
+         */
         public function getZones(){
             /**
              * array(3) {
-             *   ["name"] => string(17) "domainname.de"
-             *   ["id"]   => string(36) "avcd123e-9876-12ab-123a-1a12345678a4"
-             *   ["type"] => string(6) "NATIVE"
+             *   ["name"] => string() "domainname.de"
+             *   ["id"]   => string() "avcd123e-9876-12ab-123a-1a12345678a4"
+             *   ["type"] => string() "NATIVE"
              * }
              */
             $zones = $this->doRequest("GET", "/v1/zones");
