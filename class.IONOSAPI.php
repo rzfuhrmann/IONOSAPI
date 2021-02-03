@@ -3,8 +3,16 @@
      * Simple PHP class to call the IONOS Hosting API / IONOS Developer API
      * 
      * @author      Sebastian Fuhrmann <sebastian.fuhrmann@rz-fuhrmann.de>
+     * @copyright   (C) 2021 Rechenzentrum Fuhrmann Inh. Sebastian Fuhrmann
      * @version     2021-02-03
      * 
+     * 
+     * @TODO
+     * - add inheritance logic to support further APIs IONOSAPI => IONOS_DNS_API
+     * - add object orientation
+     * - add all functions
+     * - improve caching functionality
+     * - add possibility to retreive usage limits/used tokens
      */
 
     class IONOSAPI {
